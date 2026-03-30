@@ -1,4 +1,4 @@
-﻿package Examples
+package Examples
 
 import (
 	"fmt"
@@ -100,11 +100,13 @@ func WorkerPoolBasico() {
 
 	var wg sync.WaitGroup
 
+	wg.Add(totalWorkers)
+
 	//1) Subindo os Workers
 	for w := 1; w <= totalWorkers; w++ {
-		wg.Add(1)
 		go worker(w, jobs, results, &wg)
 	}
+
 	//2) Envia Jobs
 	for j := 1; j <= totalJobs; j++ {
 		jobs <- j
@@ -112,6 +114,14 @@ func WorkerPoolBasico() {
 	close(jobs)
 
 	//3) Espera os outros terminarem e fecha o result
+	/**
+	O uso de uma goroutine para fechar o canal de results aq acontece
+	 justamente para não bloquear a execução do restante da função, para que
+	 os workers possam continuar a processar os jobs e enviando resultados sem se preocupar
+
+	*Quando os workers finalizarem, o wg.Wait() vai liberar a goroutine que fecha o canal de results,
+	 sinalizando que não ha mais resultados a serem processados.
+	*/
 	go func() {
 		wg.Wait()
 		close(results)
@@ -128,6 +138,8 @@ func WorkerPoolBasico() {
 func worker(id int, jobs chan int, results chan string, wg *sync.WaitGroup) {
 	defer wg.Done()
 
+	//*Caso o canal ainda esteja aberto e vazio, a execução da iteração e bloqueada,
+	//  até que existam ‘items’ nos canais.
 	for job := range jobs {
 		//Simulação de um processamento
 		time.Sleep(400 * time.Millisecond)
