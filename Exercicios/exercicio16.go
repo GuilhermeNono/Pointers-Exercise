@@ -5,40 +5,47 @@ import (
 	"sync"
 )
 
-func FanOutFanIn(n []int){
+func FanOutFanIn(n []int) {
 
 	const workers = 4
 
-	result := 0
+	resultCh := make(chan int)
+	numbersCh := make(chan int)
 
-	numbersCh := make(chan int, 5)
-
-	var mu sync.Mutex
 	var wg sync.WaitGroup
 
 	wg.Add(workers)
 
-	for i := 0; i < workers; i++{
-		go processor(&wg, &mu, numbersCh, &result)
+	for i := 0; i < workers; i++ {
+		go processor(&wg, numbersCh, resultCh)
 	}
 
-	for i := 0; i < len(n); i++{
-		numbersCh <- n[i]
-	}
-	close(numbersCh)
+	go func() {
+		wg.Wait()
+		close(resultCh)
+	}()
 
-	wg.Wait()
+	go func() {
+		for _, item := range n {
+			numbersCh <- item
+		}
+		close(numbersCh)
+	}()
+
+	result := 0
+
+	for i := range resultCh {
+		result += i
+	}
 
 	fmt.Print(result)
 
 }
 
-func processor(wg *sync.WaitGroup, mu *sync.Mutex, ch chan int, result *int){
+func processor(wg *sync.WaitGroup, ch chan int, result chan int) {
 	defer wg.Done()
 
-	for item := range ch{
-		mu.Lock()
-		*result += (item * 2)
-		mu.Unlock() 
+	for item := range ch {
+		result <- item * 2
 	}
 }

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"guilherme.nono/estudo/Examples"
+	"guilherme.nono/estudo/Exercicios"
 )
 
 func main() {
@@ -36,6 +36,6 @@ func main() {
 	//Exercicios.SayConcurrentWaitGroup()
 	//Exercicios.SyncWithWG()
 	//Exercicios.CalculatePowerSquare()
-	// list := []int{4, 12, 5, 29}
-	// Exercicios.FanOutFanIn(list)
+	list := []int{4, 12, 5, 29}
+	Exercicios.FanOutFanIn(list)
 }
